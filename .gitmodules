@@ -40,3 +40,6 @@
 [submodule "extern/clean-ranges"]
 	path = extern/clean-ranges
 	url = https://github.com/project-arcana/clean-ranges.git
+[submodule "extern/CLI11"]
+	path = extern/CLI11
+	url = https://github.com/CLIUtils/CLI11.git

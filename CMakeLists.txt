@@ -81,6 +81,7 @@ add_subdirectory(extern/nexus)
 add_subdirectory(extern/cpp-utils)
 add_subdirectory(extern/babel-serializer)
 add_subdirectory(extern/ctracer)
+add_subdirectory(extern/CLI11)
 
 # ===============================================
 # setup sources
@@ -126,6 +127,7 @@ target_link_libraries(${PROJECT_NAME}_lib
         cpp-utils
         ctracer
         babel-serializer
+        CLI11::CLI11
         ${COMMON_LINKER_FLAGS}
 )
 

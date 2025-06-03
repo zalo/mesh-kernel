@@ -15,7 +15,7 @@
 #include <imgui/imgui_stdlib.h>
 #include <imgui/imfilebrowser.hh>
 
-#include <CLI11.hpp>
+#include <CLI/CLI.hpp>
 
 #include <rich-log/log.hh>
 
