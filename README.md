@@ -25,14 +25,6 @@ cmake ..
 make
 ```
 
-## Dependencies
-All dependencies are submodules and *should* therefore be pulled automatically
-
-* C++20 or higher
-* [CLI11](https://github.com/CLIUtils/CLI11) (for command line parsing)
-* [Eigen](https://eigen.tuxfamily.org/) (for linear algebra)
-* OpenGL/GLFW/GLAD (for rendering)
-
 ## Usage
 
 ```bash
