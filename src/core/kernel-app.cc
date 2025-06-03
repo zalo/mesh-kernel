@@ -385,6 +385,8 @@ bool KernelApp::load_mesh(cc::string_view const& path, bool normalize)
         CC_ASSERT(tg::abs(m_input_int_position[v].z) <= (ipg::i64(1) << geometry_t::bits_position));
     }
 
+    m_input_mesh.compactify();
+
     return true;
 }
 
