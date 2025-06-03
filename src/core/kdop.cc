@@ -1,0 +1,1 @@
+#include "kdop.hh" // smoke
