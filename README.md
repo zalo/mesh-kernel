@@ -50,7 +50,7 @@ make
 ### Example
 
 ```bash
-./mesh_kernel -i bunny.obj -o bunny_kernel.obj --triangulate --use-seidel
+./mesh_kernel -i bunny.obj -o bunny_kernel.obj --triangulate
 ```
 
 This command computes the kernel of the `bunny.obj` mesh, using Seidel's solver for early-out checks and saves the triangulated result as `bunny_kernel.obj`.
