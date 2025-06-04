@@ -3,7 +3,7 @@
 A C++ tool to compute the **kernel of a 3D mesh**, using robust geometric algorithms and optional visualization features. This project supports various options for customizing the computation pipeline and output format.
 
 TODO:
-- Reference to research paper
+- Implementation of "Exact and Efficient Mesh-Kernel Generation" - J. Nehring-Wirxel and P. Kern and P. Trettner and L. Kobbelt
 - how to cite us
 
 ## Features
