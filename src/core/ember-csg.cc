@@ -1,4 +1,5 @@
 #include "ember-csg.hh"
+#include "ember-intersect.hh"
 
 #include <cstring>
 #include <clean-core/vector.hh>
@@ -132,17 +133,17 @@ void EmberCSG::init_meshes(pm::vertex_attribute<pos_t> const& mesh_a_positions,
 
 bool EmberCSG::compute_intersections()
 {
-    // For now, implement a simplified intersection computation
-    // In a full EMBER implementation, this would involve:
-    // 1. Spatial partitioning for efficient proximity queries
-    // 2. Triangle-triangle intersection tests
-    // 3. Edge-face intersection tests
-    // 4. Vertex-in-mesh tests
+    LOGD(Default, Debug, "Computing mesh-mesh intersections using EMBER algorithm");
     
-    LOGD(Default, Debug, "Computing mesh-mesh intersections");
+    // Use the dedicated intersection module
+    m_intersection_result = m_intersector.compute_intersections(m_mesh_a, m_mesh_a_positions,
+                                                                m_mesh_b, m_mesh_b_positions);
     
-    // This is a placeholder for the full intersection computation
-    // Real implementation would need triangle-triangle intersection routines
+    if (!m_intersection_result.has_intersections())
+    {
+        LOGD(Default, Info, "No intersections found between meshes");
+        // This may be valid for some CSG operations (e.g., union of non-overlapping meshes)
+    }
     
     return true;
 }
@@ -155,10 +156,27 @@ bool EmberCSG::build_local_arrangements()
     // 2. Edge-on-edge intersections
     // 3. Coplanar face intersections
     
-    LOGD(Default, Debug, "Building local arrangements");
+    LOGD(Default, Debug, "Building local arrangements at %d intersection points", 
+         m_intersection_result.intersections.size());
     
-    // This is a placeholder for the full local arrangement construction
-    // Real implementation would build arrangement graphs at intersection points
+    if (!m_intersection_result.has_intersections())
+    {
+        LOGD(Default, Debug, "No intersections to process");
+        return true;
+    }
+    
+    // Process each intersection to build arrangements
+    for (auto const& intersection : m_intersection_result.intersections)
+    {
+        // In a full EMBER implementation, this would:
+        // 1. Group nearby intersections into arrangement regions
+        // 2. Build arrangement graphs for each region
+        // 3. Compute cell decomposition within each arrangement
+        // 4. Classify cells relative to both input meshes
+        
+        LOGD(Default, Trace, "Processing intersection between triangles %d and %d",
+             intersection.triangle_a_index, intersection.triangle_b_index);
+    }
     
     return true;
 }

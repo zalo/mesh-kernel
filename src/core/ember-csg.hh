@@ -3,6 +3,7 @@
 #include <polymesh/Mesh.hh>
 #include <integer-plane-geometry/geometry.hh>
 #include <core/options.hh>
+#include <core/ember-intersect.hh>
 
 namespace mk
 {
@@ -78,6 +79,10 @@ private: // members
     
     ember_options m_options;
     bool m_has_result = false;
+    
+    /// Intersection processor
+    ember::MeshIntersector m_intersector;
+    ember::MeshIntersection m_intersection_result;
 
 private: // implementation
     /// Initialize meshes from input
