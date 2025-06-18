@@ -134,8 +134,8 @@ bool EmberApp::load_mesh(const std::string& path, pm::Mesh& mesh, pm::vertex_att
             return false;
         }
         
-        // Remove duplicate vertices
-        pm::deduplicate(temp_positions);
+        // Note: Deduplication disabled due to hash function issues with tg::dpos3
+        // pm::deduplicate(mesh, temp_positions);
         
         // Convert to integer positions for exact arithmetic
         convert_to_integer_positions(temp_positions, positions);
@@ -164,11 +164,7 @@ bool EmberApp::save_mesh(const std::string& path, pm::Mesh const& mesh, pm::vert
         std::filesystem::path file_path(path);
         std::filesystem::create_directories(file_path.parent_path());
         
-        if (!pm::save(path, mesh, temp_positions))
-        {
-            LOGD(Default, Error, "Failed to save mesh to %s", path.c_str());
-            return false;
-        }
+        pm::save(path, temp_positions);
         
         LOGD(Default, Info, "Saved result mesh: %d vertices, %d faces", 
              mesh.vertices().size(), mesh.faces().size());

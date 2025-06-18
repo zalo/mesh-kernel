@@ -2,7 +2,7 @@
 #include <core/ember-app.hh>
 #include <core/ember-classify.hh>
 #include <polymesh/objects/cube.hh>
-#include <polymesh/objects/sphere.hh>
+#include <polymesh/objects/uv_sphere.hh>
 #include <iostream>
 
 using namespace mk;
@@ -32,12 +32,14 @@ bool test_mesh_classification()
         );
     }
     
-    // Create mesh B as a copy of mesh A
-    mesh_b = mesh_a;
-    positions_b = pm::vertex_attribute<EmberCSG::pos_t>(mesh_b);
+    // Create mesh B as a separate cube
+    auto corner_b0 = pm::objects::add_cube(mesh_b, positions_b);
+    
+    // Offset mesh B slightly
     for (auto v : mesh_b.vertices())
     {
-        positions_b[v] = positions_a[pm::vertex_handle(v.idx.value)];
+        auto& pos = positions_b[v];
+        pos = EmberCSG::pos_t(pos.x + 500, pos.y, pos.z); // Offset by 0.5 units in integer coordinates
     }
     
     // Test mesh classifier
@@ -93,12 +95,15 @@ bool test_ember_csg_basic()
         );
     }
     
-    // Create mesh B as a copy of mesh A for now
-    mesh_b = mesh_a;
-    positions_b = pm::vertex_attribute<EmberCSG::pos_t>(mesh_b);
+    // Create simple test mesh B 
+    // For testing purposes, just create another simple cube at a different position
+    auto corner_b0 = pm::objects::add_cube(mesh_b, positions_b);
+    
+    // Offset mesh B slightly
     for (auto v : mesh_b.vertices())
     {
-        positions_b[v] = positions_a[pm::vertex_handle(v.idx.value)];
+        auto& pos = positions_b[v];
+        pos = EmberCSG::pos_t(pos.x + 500, pos.y, pos.z); // Offset by 0.5 units in integer coordinates
     }
     
     std::cout << "Mesh A: " << mesh_a.vertices().size() << " vertices, " << mesh_a.faces().size() << " faces\n";

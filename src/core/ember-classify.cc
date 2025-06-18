@@ -5,8 +5,15 @@
 #include <integer-plane-geometry/plane.hh>
 #include <typed-geometry/functions/vector/cross.hh>
 #include <typed-geometry/functions/vector/dot.hh>
-#include <clean-core/set.hh>
-#include <clean-core/map.hh>
+#include <set>
+#include <map>
+
+// Custom comparison for vertex handles (needed for std::map)
+struct VertexHandleCompare {
+    bool operator()(const pm::vertex_handle& lhs, const pm::vertex_handle& rhs) const {
+        return lhs.idx.value < rhs.idx.value;
+    }
+};
 
 namespace mk::ember
 {
@@ -148,26 +155,32 @@ bool MeshClassifier::ray_triangle_intersect(
     auto edge1 = v1 - v0;
     auto edge2 = v2 - v0;
     
+    // Convert positions to vectors for cross product
+    auto ray_dir_vec = tg::vec3(ray_direction.x, ray_direction.y, ray_direction.z);
+    auto edge2_vec = tg::vec3(edge2.x, edge2.y, edge2.z);
+    
     // Compute cross product of ray direction and edge2
-    auto h = cross(ray_direction, edge2);
-    auto a = dot(edge1, h);
+    auto h = cross(ray_dir_vec, edge2_vec);
+    auto edge1_vec = tg::vec3(edge1.x, edge1.y, edge1.z);
+    auto a = dot(edge1_vec, h);
     
     // Check if ray is parallel to triangle
     if (a == 0) return false;
     
     auto f = 1.0 / double(a); // Use double for division
     auto s = ray_origin - v0;
-    auto u = f * double(dot(s, h));
+    auto s_vec = tg::vec3(s.x, s.y, s.z);
+    auto u = f * double(dot(s_vec, h));
     
     if (u < 0.0 || u > 1.0) return false;
     
-    auto q = cross(s, edge1);
-    auto v = f * double(dot(ray_direction, q));
+    auto q = cross(s_vec, edge1_vec);
+    auto v = f * double(dot(ray_dir_vec, q));
     
     if (v < 0.0 || u + v > 1.0) return false;
     
     // Check if intersection is in front of ray origin
-    auto t = f * double(dot(edge2, q));
+    auto t = f * double(dot(edge2_vec, q));
     
     if (t > 1e-6) // Ray intersects triangle
     {
@@ -183,7 +196,7 @@ bool MeshClassifier::ray_triangle_intersect(
     return false;
 }
 
-pos_t MeshClassifier::get_face_centroid(
+MeshClassifier::pos_t MeshClassifier::get_face_centroid(
     pm::face_handle face,
     pm::vertex_attribute<pos_t> const& positions)
 {
@@ -326,7 +339,7 @@ void CSGConstructor::copy_faces_to_result(
     pm::vertex_attribute<pos_t>& result_positions)
 {
     // Map from source vertex handles to result vertex handles
-    cc::set<pm::vertex_handle> used_vertices;
+    std::set<pm::vertex_handle, VertexHandleCompare> used_vertices;
     
     // First pass: identify used vertices
     int face_index = 0;
@@ -343,7 +356,7 @@ void CSGConstructor::copy_faces_to_result(
     }
     
     // Create vertex mapping
-    cc::map<pm::vertex_handle, pm::vertex_handle> vertex_map;
+    std::map<pm::vertex_handle, pm::vertex_handle, VertexHandleCompare> vertex_map;
     for (auto v : used_vertices)
     {
         auto new_v = result_mesh.vertices().add();
@@ -365,7 +378,9 @@ void CSGConstructor::copy_faces_to_result(
                 new_vertices.push_back(vertex_map[v]);
             }
             
-            result_mesh.faces().add(new_vertices);
+            // Convert cc::vector to std::vector for polymesh API
+            std::vector<pm::vertex_handle> std_vertices(new_vertices.begin(), new_vertices.end());
+            result_mesh.faces().add(std_vertices);
         }
         face_index++;
     }
@@ -384,7 +399,9 @@ void CSGConstructor::add_intersection_geometry(
 cc::vector<bool> CSGConstructor::select_faces_for_union(
     cc::vector<ElementClassificationResult> const& classification)
 {
-    cc::vector<bool> include(classification.size(), false);
+    cc::vector<bool> include(classification.size());
+    for (size_t i = 0; i < include.size(); ++i)
+        include[i] = false;
     
     for (size_t i = 0; i < classification.size(); ++i)
     {
@@ -400,7 +417,9 @@ cc::vector<bool> CSGConstructor::select_faces_for_union(
 cc::vector<bool> CSGConstructor::select_faces_for_intersection(
     cc::vector<ElementClassificationResult> const& classification)
 {
-    cc::vector<bool> include(classification.size(), false);
+    cc::vector<bool> include(classification.size());
+    for (size_t i = 0; i < include.size(); ++i)
+        include[i] = false;
     
     for (size_t i = 0; i < classification.size(); ++i)
     {
@@ -417,7 +436,9 @@ cc::vector<bool> CSGConstructor::select_faces_for_difference(
     cc::vector<ElementClassificationResult> const& classification,
     bool is_subtracted_mesh)
 {
-    cc::vector<bool> include(classification.size(), false);
+    cc::vector<bool> include(classification.size());
+    for (size_t i = 0; i < include.size(); ++i)
+        include[i] = false;
     
     for (size_t i = 0; i < classification.size(); ++i)
     {

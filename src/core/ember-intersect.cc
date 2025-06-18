@@ -6,7 +6,7 @@
 #include <integer-plane-geometry/are_parallel.hh>
 #include <typed-geometry/functions/basic/scalar_math.hh>
 #include <typed-geometry/functions/basic/minmax.hh>
-#include <typed-geometry/functions/basic/intersections.hh>
+#include <typed-geometry/feature/intersections.hh>
 
 namespace mk::ember
 {
@@ -189,8 +189,9 @@ bool MeshIntersector::intersect_segments(pos_t const& a0, pos_t const& a1,
     auto dir_b = b1 - b0;
     auto start_diff = a0 - b0;
     
-    // Check if segments are parallel
-    if (ipg::are_parallel(dir_a, dir_b))
+    // Check if segments are parallel by checking if cross product is zero
+    auto cross_prod = cross(dir_a, dir_b);
+    if (cross_prod.x == 0 && cross_prod.y == 0 && cross_prod.z == 0)
         return false;
     
     // For now, return false - full implementation would compute intersection
@@ -376,8 +377,16 @@ void MeshIntersector::BVH::build_recursive(int node_index, cc::vector<pm::face_h
     
     // Split triangles in half
     int mid = triangles.size() / 2;
-    cc::vector<pm::face_handle> left_triangles(triangles.begin(), triangles.begin() + mid);
-    cc::vector<pm::face_handle> right_triangles(triangles.begin() + mid, triangles.end());
+    cc::vector<pm::face_handle> left_triangles;
+    cc::vector<pm::face_handle> right_triangles;
+    
+    // Copy left half
+    for (int i = 0; i < mid; ++i)
+        left_triangles.push_back(triangles[i]);
+    
+    // Copy right half
+    for (int i = mid; i < triangles.size(); ++i)
+        right_triangles.push_back(triangles[i]);
     
     // Create child nodes
     int left_index = nodes.size();
