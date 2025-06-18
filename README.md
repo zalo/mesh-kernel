@@ -1,6 +1,13 @@
 # Mesh Kernel Computation
 
-A C++ tool to compute the **kernel of a 3D mesh**, using robust geometric algorithms and optional visualization features. This project supports various options for customizing the computation pipeline and output format.
+A C++ tool to compute the **kernel of a 3D mesh** and perform **exact CSG boolean operations** using robust geometric algorithms and optional visualization features. This project supports various options for customizing the computation pipeline and output format.
+
+## Key Features
+
+* **Mesh Kernel Computation**: Compute the kernel polyhedron of a 3D mesh
+* **EMBER CSG Operations**: Exact mesh boolean operations (union, intersection, difference)
+* **Exact Arithmetic**: Robust geometric computations using integer-plane-geometry
+* **Multiple Input Formats**: Support for OBJ, STL, and other common mesh formats
 
 TODO:
 - Implementation of "Exact and Efficient Mesh-Kernel Generation" - J. Nehring-Wirxel and P. Kern and P. Trettner and L. Kobbelt
@@ -9,6 +16,7 @@ TODO:
 ## Features
 
 * Compute the **kernel polyhedron** of a 3D mesh.
+* Perform **exact CSG boolean operations** (union, intersection, difference) on pairs of meshes.
 * Optional use of **exact linear programming** or **Seidel's solver** for feasibility checks.
 * Rendering of input and result meshes (optional).
 
@@ -25,13 +33,29 @@ cmake ..
 make
 ```
 
+This will build two executables:
+- `mesh-kernel`: The original mesh kernel computation tool
+- `ember-csg`: The new EMBER CSG boolean operations tool
+
+See [EMBER.md](EMBER.md) for detailed documentation on the EMBER CSG functionality.
+
 ## Usage
+
+### Mesh Kernel Computation
 
 ```bash
 ./mesh_kernel -i input_mesh.obj -o result_mesh.obj
 ```
 
+### EMBER CSG Boolean Operations
+
+```bash
+./ember-csg -a mesh1.obj -b mesh2.obj -o result.obj --operation union
+```
+
 ### Options
+
+#### Mesh Kernel Options
 
 | Flag                        | Description                                                                             |
 | --------------------------- | --------------------------------------------------------------------------------------- |
@@ -47,13 +71,40 @@ make
 | `-k, --kdop-k`              | Set kdop `k` parameter (default: `3`, which corresponds to AABB)                        |
 | `--triangulate`             | Triangulate the output mesh                                                             |
 
+#### EMBER CSG Options
+
+| Flag                        | Description                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| `-a, --input-a`             | Path to first input mesh (required)                                                     |
+| `-b, --input-b`             | Path to second input mesh (required)                                                    |
+| `-o, --output`              | Path to output mesh (required)                                                          |
+| `--operation`               | CSG operation: `union`, `intersection`, `difference` (default: `union`)                 |
+| `--format`                  | Output format: `obj`, `stl` (default: `obj`)                                            |
+| `--no-exact`                | Disable exact arithmetic                                                                |
+| `--no-validate`             | Disable result validation                                                               |
+
 ### Example
+
+#### Mesh Kernel Computation
 
 ```bash
 ./mesh_kernel -i bunny.obj -o bunny_kernel.obj --triangulate
 ```
 
 This command computes the kernel of the `bunny.obj` mesh, using Seidel's solver for early-out checks and saves the triangulated result as `bunny_kernel.obj`.
+
+#### EMBER CSG Operations
+
+```bash
+# Union of two meshes
+./ember-csg -a cube.obj -b sphere.obj -o union_result.obj --operation union
+
+# Intersection of two meshes  
+./ember-csg -a mesh1.stl -b mesh2.stl -o intersection.stl --operation intersection
+
+# Difference of two meshes (A - B)
+./ember-csg -a complex_mesh.obj -b simple_mesh.obj -o difference.obj --operation difference
+```
 
 <!-- ## License -->
 

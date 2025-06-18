@@ -14,7 +14,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # ===============================================
 # options
 
-option(MK_TBB_ENABLED "Enable TBB" ON)
+option(MK_TBB_ENABLED "Enable TBB" OFF)
 option(MK_MOLD_LINKER_ENABLED "if ON, the mold linker is enabled" ON)
 
 # ===============================================
@@ -67,21 +67,25 @@ option(GLFW_INSTALL  OFF)
 # ===============================================
 # add submodules
 
+# Core dependencies (available and working)
 add_subdirectory(extern/clean-core)
 add_subdirectory(extern/clean-ranges)
 add_subdirectory(extern/typed-geometry)
 add_subdirectory(extern/reflector)
 add_subdirectory(extern/rich-log)
 add_subdirectory(extern/polymesh)
-add_subdirectory(extern/glfw)
-add_subdirectory(extern/glow)
-add_subdirectory(extern/imgui-lean)
-add_subdirectory(extern/glow-extras)
-add_subdirectory(extern/nexus)
-add_subdirectory(extern/cpp-utils)
-add_subdirectory(extern/babel-serializer)
-add_subdirectory(extern/ctracer)
 add_subdirectory(extern/CLI11)
+
+# GUI dependencies (commented out due to network access issues)
+# add_subdirectory(extern/reflector)
+# add_subdirectory(extern/glfw)
+# add_subdirectory(extern/glow)
+# add_subdirectory(extern/imgui-lean)
+# add_subdirectory(extern/glow-extras)
+# add_subdirectory(extern/nexus)
+# add_subdirectory(extern/cpp-utils)
+# add_subdirectory(extern/babel-serializer)
+# add_subdirectory(extern/ctracer)
 
 # ===============================================
 # setup sources
@@ -90,6 +94,22 @@ file(GLOB_RECURSE SOURCES
     "src/*.hh"
 )
 
+# Remove GUI-dependent files when building without GUI support
+list(REMOVE_ITEM SOURCES 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/kernel-app.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/kernel-app.hh"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/kernel-plane-cut.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core/kernel-plane-cut.hh"
+)
+
+# Remove imgui directory entirely
+file(GLOB_RECURSE IMGUI_SOURCES "src/imgui/*")
+list(REMOVE_ITEM SOURCES ${IMGUI_SOURCES})
+
+# Remove rendering directory entirely  
+file(GLOB_RECURSE RENDERING_SOURCES "src/rendering/*")
+list(REMOVE_ITEM SOURCES ${RENDERING_SOURCES})
+
 # group sources according to folder structure
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
@@ -97,7 +117,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 # add executable
 
 # remove main.cc, readd later. This allows us to have a separate test executable
-list(REMOVE_ITEM SOURCES "main.cc")
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc")
 add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
 
 # ===============================================
@@ -119,14 +139,6 @@ target_link_libraries(${PROJECT_NAME}_lib
         reflector
         rich-log
         polymesh
-        glfw
-        glow
-        imgui
-        glow-extras
-        nexus
-        cpp-utils
-        ctracer
-        babel-serializer
         CLI11::CLI11
         ${COMMON_LINKER_FLAGS}
 )
@@ -153,6 +165,14 @@ endif()
 # Apply common flags for your executable (warnings enabled)
 target_compile_options(${PROJECT_NAME}_lib PRIVATE ${COMMON_COMPILER_FLAGS})  # Apply bmi flag to target
 
-# Add the actual target
-add_executable(${PROJECT_NAME} "src/main.cc")
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_lib)
+# GUI application disabled due to missing dependencies
+# add_executable(${PROJECT_NAME} "src/main.cc")
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_lib)
+
+# Add EMBER CSG executable
+add_executable(ember-csg "src/ember-main.cc")
+target_link_libraries(ember-csg PRIVATE ${PROJECT_NAME}_lib)
+
+# Add EMBER test executable
+add_executable(ember-test "src/ember-test.cc")
+target_link_libraries(ember-test PRIVATE ${PROJECT_NAME}_lib)
