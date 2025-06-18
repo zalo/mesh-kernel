@@ -156,3 +156,11 @@ target_compile_options(${PROJECT_NAME}_lib PRIVATE ${COMMON_COMPILER_FLAGS})  # 
 # Add the actual target
 add_executable(${PROJECT_NAME} "src/main.cc")
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_lib)
+
+# Add EMBER CSG executable
+add_executable(ember-csg "src/ember-main.cc")
+target_link_libraries(ember-csg PRIVATE ${PROJECT_NAME}_lib)
+
+# Add EMBER test executable
+add_executable(ember-test "src/ember-test.cc")
+target_link_libraries(ember-test PRIVATE ${PROJECT_NAME}_lib)
