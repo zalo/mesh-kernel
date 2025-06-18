@@ -37,6 +37,8 @@ This will build two executables:
 - `mesh-kernel`: The original mesh kernel computation tool
 - `ember-csg`: The new EMBER CSG boolean operations tool
 
+See [EMBER.md](EMBER.md) for detailed documentation on the EMBER CSG functionality.
+
 ## Usage
 
 ### Mesh Kernel Computation
