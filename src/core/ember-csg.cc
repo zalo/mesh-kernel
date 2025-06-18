@@ -183,81 +183,70 @@ bool EmberCSG::build_local_arrangements()
 
 bool EmberCSG::classify_elements()
 {
-    // Element classification determines which parts of each mesh
-    // should be included in the final result based on the operation
-    
     LOGD(Default, Debug, "Classifying mesh elements");
     
-    // For union: include all elements not strictly inside the other mesh
-    // For intersection: include only elements inside both meshes
-    // For difference: include A elements not inside B, exclude B elements
+    // Classify faces of mesh A relative to mesh B
+    auto classification_a = m_classifier.classify_mesh_faces(m_mesh_a, m_mesh_a_positions,
+                                                             m_mesh_b, m_mesh_b_positions,
+                                                             m_intersection_result);
     
-    // This is a placeholder for the full classification algorithm
-    // Real implementation would use robust inside/outside tests
+    // Classify faces of mesh B relative to mesh A
+    auto classification_b = m_classifier.classify_mesh_faces(m_mesh_b, m_mesh_b_positions,
+                                                             m_mesh_a, m_mesh_a_positions,
+                                                             m_intersection_result);
+    
+    // Store classifications for later use in construction
+    m_classification_a = classification_a;
+    m_classification_b = classification_b;
+    
+    LOGD(Default, Info, "Classified %d faces from mesh A and %d faces from mesh B",
+         classification_a.size(), classification_b.size());
     
     return true;
 }
 
 bool EmberCSG::construct_result(csg_operation op)
 {
-    // Construct the result mesh based on the operation type
-    // This involves combining the relevant parts of both input meshes
-    
     LOGD(Default, Debug, "Constructing result mesh for operation: %s", csg_utils::operation_to_string(op));
     
     // Clear result mesh
     m_result_mesh.clear();
     m_result_positions = pm::vertex_attribute<pos_t>(m_result_mesh);
     
-    // For now, implement a simple placeholder that just copies mesh A
-    // Real implementation would construct the proper boolean result
+    // Use the CSG constructor to build the result based on classifications
+    bool success = false;
     
     switch (op)
     {
     case csg_operation::union_op:
-        // Union: combine both meshes, removing overlapping regions
-        m_result_mesh = m_mesh_a; // Placeholder
-        m_result_positions = pm::vertex_attribute<pos_t>(m_result_mesh);
-        for (auto v : m_result_mesh.vertices())
-        {
-            auto src_v = pm::vertex_handle(v.idx.value);
-            if (src_v.is_valid() && src_v.idx.value < m_mesh_a.vertices().size())
-            {
-                m_result_positions[v] = m_mesh_a_positions[src_v];
-            }
-        }
+        success = m_constructor.construct_union(
+            m_mesh_a, m_mesh_a_positions,
+            m_mesh_b, m_mesh_b_positions,
+            m_classification_a, m_classification_b,
+            m_intersection_result,
+            m_result_mesh, m_result_positions);
         break;
         
     case csg_operation::intersection:
-        // Intersection: keep only overlapping regions
-        m_result_mesh = m_mesh_a; // Placeholder
-        m_result_positions = pm::vertex_attribute<pos_t>(m_result_mesh);
-        for (auto v : m_result_mesh.vertices())
-        {
-            auto src_v = pm::vertex_handle(v.idx.value);
-            if (src_v.is_valid() && src_v.idx.value < m_mesh_a.vertices().size())
-            {
-                m_result_positions[v] = m_mesh_a_positions[src_v];
-            }
-        }
+        success = m_constructor.construct_intersection(
+            m_mesh_a, m_mesh_a_positions,
+            m_mesh_b, m_mesh_b_positions,
+            m_classification_a, m_classification_b,
+            m_intersection_result,
+            m_result_mesh, m_result_positions);
         break;
         
     case csg_operation::difference:
-        // Difference: A minus B
-        m_result_mesh = m_mesh_a; // Placeholder
-        m_result_positions = pm::vertex_attribute<pos_t>(m_result_mesh);
-        for (auto v : m_result_mesh.vertices())
-        {
-            auto src_v = pm::vertex_handle(v.idx.value);
-            if (src_v.is_valid() && src_v.idx.value < m_mesh_a.vertices().size())
-            {
-                m_result_positions[v] = m_mesh_a_positions[src_v];
-            }
-        }
+        success = m_constructor.construct_difference(
+            m_mesh_a, m_mesh_a_positions,
+            m_mesh_b, m_mesh_b_positions,
+            m_classification_a, m_classification_b,
+            m_intersection_result,
+            m_result_mesh, m_result_positions);
         break;
     }
     
-    return true;
+    return success;
 }
 
 bool EmberCSG::validate_result()

@@ -4,6 +4,7 @@
 #include <integer-plane-geometry/geometry.hh>
 #include <core/options.hh>
 #include <core/ember-intersect.hh>
+#include <core/ember-classify.hh>
 
 namespace mk
 {
@@ -83,6 +84,14 @@ private: // members
     /// Intersection processor
     ember::MeshIntersector m_intersector;
     ember::MeshIntersection m_intersection_result;
+    
+    /// Classification and construction processors
+    ember::MeshClassifier m_classifier;
+    ember::CSGConstructor m_constructor;
+    
+    /// Classification results
+    cc::vector<ember::ElementClassificationResult> m_classification_a;
+    cc::vector<ember::ElementClassificationResult> m_classification_b;
 
 private: // implementation
     /// Initialize meshes from input
