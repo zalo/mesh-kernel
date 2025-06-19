@@ -32,7 +32,11 @@ if (MSVC)
     endif()
 else()
     list(APPEND COMMON_COMPILER_FLAGS -Wall -Wextra)
-    list(APPEND COMMON_COMPILER_FLAGS -mbmi2) # Added for BMI2 support
+    
+    # Check for x86/x64 architecture before adding BMI2 flag
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|i[3-6]86")
+        list(APPEND COMMON_COMPILER_FLAGS -mbmi2) # Added for BMI2 support on x86
+    endif()
 
     if (MK_ENABLE_WERROR)
         list(APPEND COMMON_COMPILER_FLAGS -Werror)

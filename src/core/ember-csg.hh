@@ -78,6 +78,10 @@ private: // members
     pm::vertex_attribute<pos_t> m_mesh_b_positions{m_mesh_b};
     pm::vertex_attribute<pos_t> m_result_positions{m_result_mesh};
     
+    // References to input mesh positions
+    pm::vertex_attribute<pos_t> const* m_mesh_a_positions_ref = nullptr;
+    pm::vertex_attribute<pos_t> const* m_mesh_b_positions_ref = nullptr;
+    
     ember_options m_options;
     bool m_has_result = false;
     

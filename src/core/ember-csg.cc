@@ -29,8 +29,12 @@ bool EmberCSG::compute_csg(pm::vertex_attribute<pos_t> const& mesh_a_positions,
     init_meshes(mesh_a_positions, mesh_b_positions);
     
     LOGD(Default, Info, "Computing CSG operation: %s", csg_utils::operation_to_string(op));
-    LOGD(Default, Info, "Mesh A: %d vertices, %d faces", m_mesh_a.vertices().size(), m_mesh_a.faces().size());
-    LOGD(Default, Info, "Mesh B: %d vertices, %d faces", m_mesh_b.vertices().size(), m_mesh_b.faces().size());
+    LOGD(Default, Info, "Mesh A: %d vertices, %d faces", 
+         m_mesh_a_positions_ref->mesh().vertices().size(), 
+         m_mesh_a_positions_ref->mesh().faces().size());
+    LOGD(Default, Info, "Mesh B: %d vertices, %d faces", 
+         m_mesh_b_positions_ref->mesh().vertices().size(), 
+         m_mesh_b_positions_ref->mesh().faces().size());
     
     // Compute mesh-mesh intersections
     if (!compute_intersections())
@@ -98,14 +102,13 @@ void EmberCSG::init_meshes(pm::vertex_attribute<pos_t> const& mesh_a_positions,
                            pm::vertex_attribute<pos_t> const& mesh_b_positions)
 {
     // Clear previous results
-    m_mesh_a.clear();
-    m_mesh_b.clear();
     m_result_mesh.clear();
     
-    // TODO: For now, work directly with input meshes instead of copying
-    // The mesh copying approach has issues with polymesh API
-    // This needs to be redesigned to work with references or use a different approach
-    LOGD(Default, Warning, "Mesh initialization disabled - working with input meshes directly");
+    // Store references to input meshes and positions
+    // Note: We can't copy the meshes directly due to polymesh's design
+    // Instead, we'll work with const references to the input meshes
+    m_mesh_a_positions_ref = &mesh_a_positions;
+    m_mesh_b_positions_ref = &mesh_b_positions;
 }
 
 bool EmberCSG::compute_intersections()
@@ -113,8 +116,9 @@ bool EmberCSG::compute_intersections()
     LOGD(Default, Debug, "Computing mesh-mesh intersections using EMBER algorithm");
     
     // Use the dedicated intersection module
-    m_intersection_result = m_intersector.compute_intersections(m_mesh_a, m_mesh_a_positions,
-                                                                m_mesh_b, m_mesh_b_positions);
+    m_intersection_result = m_intersector.compute_intersections(
+        m_mesh_a_positions_ref->mesh(), *m_mesh_a_positions_ref,
+        m_mesh_b_positions_ref->mesh(), *m_mesh_b_positions_ref);
     
     if (!m_intersection_result.has_intersections())
     {
@@ -163,14 +167,16 @@ bool EmberCSG::classify_elements()
     LOGD(Default, Debug, "Classifying mesh elements");
     
     // Classify faces of mesh A relative to mesh B
-    auto classification_a = m_classifier.classify_mesh_faces(m_mesh_a, m_mesh_a_positions,
-                                                             m_mesh_b, m_mesh_b_positions,
-                                                             m_intersection_result);
+    auto classification_a = m_classifier.classify_mesh_faces(
+        m_mesh_a_positions_ref->mesh(), *m_mesh_a_positions_ref,
+        m_mesh_b_positions_ref->mesh(), *m_mesh_b_positions_ref,
+        m_intersection_result);
     
     // Classify faces of mesh B relative to mesh A
-    auto classification_b = m_classifier.classify_mesh_faces(m_mesh_b, m_mesh_b_positions,
-                                                             m_mesh_a, m_mesh_a_positions,
-                                                             m_intersection_result);
+    auto classification_b = m_classifier.classify_mesh_faces(
+        m_mesh_b_positions_ref->mesh(), *m_mesh_b_positions_ref,
+        m_mesh_a_positions_ref->mesh(), *m_mesh_a_positions_ref,
+        m_intersection_result);
     
     // Store classifications for later use in construction
     m_classification_a = classification_a;
@@ -197,8 +203,8 @@ bool EmberCSG::construct_result(csg_operation op)
     {
     case csg_operation::union_op:
         success = m_constructor.construct_union(
-            m_mesh_a, m_mesh_a_positions,
-            m_mesh_b, m_mesh_b_positions,
+            m_mesh_a_positions_ref->mesh(), *m_mesh_a_positions_ref,
+            m_mesh_b_positions_ref->mesh(), *m_mesh_b_positions_ref,
             m_classification_a, m_classification_b,
             m_intersection_result,
             m_result_mesh, m_result_positions);
@@ -206,8 +212,8 @@ bool EmberCSG::construct_result(csg_operation op)
         
     case csg_operation::intersection:
         success = m_constructor.construct_intersection(
-            m_mesh_a, m_mesh_a_positions,
-            m_mesh_b, m_mesh_b_positions,
+            m_mesh_a_positions_ref->mesh(), *m_mesh_a_positions_ref,
+            m_mesh_b_positions_ref->mesh(), *m_mesh_b_positions_ref,
             m_classification_a, m_classification_b,
             m_intersection_result,
             m_result_mesh, m_result_positions);
@@ -215,8 +221,8 @@ bool EmberCSG::construct_result(csg_operation op)
         
     case csg_operation::difference:
         success = m_constructor.construct_difference(
-            m_mesh_a, m_mesh_a_positions,
-            m_mesh_b, m_mesh_b_positions,
+            m_mesh_a_positions_ref->mesh(), *m_mesh_a_positions_ref,
+            m_mesh_b_positions_ref->mesh(), *m_mesh_b_positions_ref,
             m_classification_a, m_classification_b,
             m_intersection_result,
             m_result_mesh, m_result_positions);
